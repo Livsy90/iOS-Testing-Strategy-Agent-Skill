@@ -1,7 +1,7 @@
 # iOS Testing Strategy Agent Skill
 
 <p align="center">
-<img width="320" src="https://github.com/user-attachments/assets/a71688d2-54a3-4ea5-8362-e4659b3d46c6"/>
+<img width="320" src="https://github.com/user-attachments/assets/2d67b93e-ca0e-40ae-949c-5d2560c89add" />
 </p>
 
 A reusable AI-agent skill for designing, reviewing, and improving testing strategies in iOS applications.
