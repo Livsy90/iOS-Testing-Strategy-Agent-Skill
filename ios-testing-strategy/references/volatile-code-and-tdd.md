@@ -1,298 +1,255 @@
-# Risk-Based Test Prioritization
+# Volatile Code and TDD
 
-Use this reference when deciding what to test first, how deeply to test it, or how to distribute effort across domains.
+Use this reference when testing prototypes, unstable features, architectural spikes, or deciding whether TDD is appropriate.
 
 ## Contents
 
 - [Core model](#core-model)
-- [Prioritize confidence, not coverage](#prioritize-confidence-not-coverage)
-- [Assess risk](#assess-risk)
-- [Assess stability](#assess-stability)
-- [Assess verification cost](#assess-verification-cost)
-- [Choose test depth](#choose-test-depth)
-- [Distribute effort across domains](#distribute-effort-across-domains)
-- [High-priority targets](#high-priority-targets)
-- [Lower-priority targets](#lower-priority-targets)
-- [Manual versus automated verification](#manual-versus-automated-verification)
-- [Team and delivery context](#team-and-delivery-context)
+- [Separate behavior stability from implementation stability](#separate-behavior-stability-from-implementation-stability)
+- [Testing prototypes](#testing-prototypes)
+- [Testing unstable features](#testing-unstable-features)
+- [Testing architectural spikes](#testing-architectural-spikes)
+- [When TDD is a good fit](#when-tdd-is-a-good-fit)
+- [When TDD may create churn](#when-tdd-may-create-churn)
+- [What to test first](#what-to-test-first)
+- [What to defer](#what-to-defer)
+- [Alternative validation during exploration](#alternative-validation-during-exploration)
 - [Decision workflow](#decision-workflow)
 - [Common mistakes](#common-mistakes)
 - [Review checklist](#review-checklist)
 
 ## Core model
 
-Testing effort is limited. Spend it where it produces the most confidence for the least ongoing cost.
+Testing effort should match the maturity of the design.
 
-Do not distribute tests uniformly across files, types, or modules. Different domains carry different levels of risk, volatility, and verification cost.
+Early in development, code structure may change quickly while some behavior is already stable and valuable. Protect the stable behavior without freezing temporary implementation details.
 
-Prioritize stable, high-impact behavior before low-value implementation details.
+Do not treat volatility as a reason to skip all tests. Treat it as a reason to choose boundaries and depth more carefully.
 
-## Prioritize confidence, not coverage
+## Separate behavior stability from implementation stability
 
-The objective is not to maximize:
+A feature can have stable rules and unstable structure at the same time.
 
-- test count;
-- line or branch coverage;
-- the number of mocked collaborators;
-- the number of types with dedicated test files.
+For example:
 
-The objective is to reduce meaningful product and engineering risk.
+- business rules may be clear;
+- UI composition may still change;
+- orchestration may be temporary;
+- module boundaries may still be moving;
+- adapters may be disposable.
 
-Treat coverage as a diagnostic signal. It can expose untested areas, but it cannot prove that important behavior is protected.
+Test the stable rule through an observable outcome. Avoid asserting the exact internal decomposition used today.
 
-A small set of well-chosen tests may provide more confidence than broad but shallow coverage.
+Ask two separate questions:
 
-## Assess risk
+1. Is the behavior likely to remain?
+2. Is the implementation likely to remain?
 
-Evaluate behavior across four dimensions.
+A stable behavior with unstable implementation still deserves protection, but usually through a broader or more outcome-oriented test.
 
-### Impact
+## Testing prototypes
 
-Ask what happens if it fails.
+A prototype exists to learn, not to preserve structure.
 
-High-impact failures include:
+Use tests selectively for:
 
-- data loss or corruption;
-- incorrect financial results;
-- broken authentication or authorization;
-- privacy or security violations;
-- failed migrations;
-- blocked critical flows.
-
-### Probability
-
-Regression probability increases with:
-
-- complex logic;
-- frequent modification;
-- many interacting components;
-- unclear ownership;
-- repeated past defects;
-- fragile external contracts.
-
-### Detectability
-
-Risk is higher when failures:
-
-- occur only under rare conditions;
-- depend on specific state or timing;
-- are difficult to reproduce manually;
-- produce plausible but incorrect output;
-- appear only after release.
-
-### Recovery cost
-
-Risk is higher when recovery requires:
-
-- data repair;
-- a new release;
-- migration rollback;
-- user support;
-- coordination across teams or services.
-
-Prioritize behavior with high impact, high probability, low detectability, or high recovery cost.
-
-## Assess stability
-
-Separate behavior stability from implementation stability.
-
-A feature may have stable business rules but unstable UI composition, orchestration, or module boundaries.
-
-Protect stable outcomes and invariants even while surrounding code changes.
-
-Good early targets:
-
-- calculations;
-- validation rules;
-- state transitions;
-- permissions;
+- risky algorithms;
+- critical calculations;
+- security-sensitive decisions;
 - data transformations;
-- persistence semantics;
-- security-sensitive decisions.
-
-Avoid detailed tests that freeze temporary structure.
-
-## Assess verification cost
-
-Compare automation cost with manual verification cost.
-
-Automation has high value when manual checking is:
-
-- repetitive;
-- slow;
-- error-prone;
-- difficult to configure;
-- required for every change or release;
-- dependent on rare conditions.
-
-Manual verification may be sufficient when a scenario is simple, infrequent, cheap to repeat, easy to observe, and low risk.
-
-Do not automate merely because automation is possible. Do not rely on manual testing when repetition or complexity makes it unreliable.
-
-## Choose test depth
-
-Match depth to risk.
-
-### Light coverage
-
-Use for low-risk behavior:
-
-- one representative example;
-- coverage through a broader feature test;
-- manual verification;
-- no dedicated test when another test already protects it.
-
-### Moderate coverage
-
-Use for meaningful but recoverable behavior:
-
-- happy path;
-- primary error path;
-- important boundary values;
-- feature-level collaboration test.
-
-### Deep coverage
-
-Use for high-risk behavior:
-
-- edge cases;
-- invalid inputs;
 - state transitions;
-- error and recovery paths;
-- persistence or integration behavior;
-- concurrency or timing cases where relevant;
-- regression tests for known failures.
+- assumptions the prototype is meant to validate.
 
-Depth should come from risk, not code size.
+Avoid heavy infrastructure for:
 
-## Distribute effort across domains
+- disposable UI;
+- temporary adapters;
+- experimental orchestration;
+- code expected to be rewritten soon.
 
-Allocate effort unevenly.
+When no automated test is justified, make the alternative validation explicit, such as a manual scenario, a focused spike, or instrumentation.
 
-A domain deserves more attention when it:
+## Testing unstable features
 
-- contains critical business rules;
-- handles money, identity, access, security, or data integrity;
-- has complex state or branching;
-- changes frequently;
-- has a history of regressions;
-- is difficult to verify manually;
-- integrates with unstable external systems.
+For an unstable feature, prioritize:
 
-A domain may receive less direct coverage when it:
+- stable invariants;
+- externally meaningful outcomes;
+- known regression risks;
+- integration points unlikely to change;
+- behavior that is expensive to verify manually.
 
-- mostly forwards data;
-- is simple and deterministic;
-- is already exercised through broader scenarios;
-- is temporary or expected to be removed;
-- has no stable behavior yet.
+Avoid detailed tests for:
 
-Do not assign every module the same target percentage.
+- temporary view hierarchy;
+- private helper structure;
+- exact collaborator call order;
+- provisional module boundaries;
+- short-lived abstractions.
 
-## High-priority targets
+As the feature stabilizes, add broader regression coverage around the final behavior.
+
+Do not wait for complete architectural stability if the feature already contains high-risk rules.
+
+## Testing architectural spikes
+
+An architectural spike explores feasibility, trade-offs, or API shape.
+
+Tests are useful when they validate the question the spike is trying to answer.
+
+Examples:
+
+- whether a concurrency design preserves ordering;
+- whether persistence behavior is correct;
+- whether an adapter can handle a real payload;
+- whether a feature boundary supports the intended scenario.
+
+Do not build a production-grade test suite around a spike unless the code is likely to survive.
+
+Before promoting spike code into production:
+
+- remove disposable scaffolding;
+- identify stable contracts;
+- add tests around retained behavior;
+- replace exploratory assertions with durable regression tests.
+
+## When TDD is a good fit
+
+Use TDD when:
+
+- expected behavior is clear;
+- inputs and outputs are well defined;
+- the problem is algorithmic or rule-driven;
+- edge cases matter;
+- the API boundary is stable enough to shape;
+- a regression is being fixed;
+- tests can guide design without excessive rewrite.
+
+Good candidates include:
+
+- parsers;
+- validators;
+- calculations;
+- state machines;
+- permissions;
+- domain policies;
+- transformations;
+- bug fixes with reproducible failure cases.
+
+TDD is most useful when the test expresses a durable contract rather than a temporary structure.
+
+## When TDD may create churn
+
+TDD may be a poor fit when:
+
+- requirements are still being discovered;
+- the team is exploring multiple UI flows;
+- architecture is intentionally provisional;
+- interfaces are changing rapidly;
+- the code may be discarded;
+- the main question is feasibility rather than correctness.
+
+In these cases, writing tests first can lock the team into assumptions before the problem is understood.
+
+This does not make TDD wrong. It means the cost of maintaining early tests may exceed their design value.
+
+## What to test first
+
+In volatile code, test the parts least likely to change and most costly to get wrong.
 
 Prioritize:
 
-- financial calculations;
+- business invariants;
+- financial rules;
 - authentication and authorization;
+- persistence semantics;
 - migrations;
-- persistence and synchronization rules;
-- destructive actions;
-- security-sensitive logic;
-- complex state transitions;
-- external data parsing and mapping;
-- cross-domain workflows;
-- known regression areas;
-- scenarios with expensive manual setup.
+- destructive operations;
+- error recovery;
+- state transitions;
+- data conversion;
+- known regressions.
 
-For volatile features, test stable invariants and externally meaningful outcomes first.
+Prefer a stable entry point and observable result.
 
-## Lower-priority targets
+Use a narrow test for isolated algorithms. Use a feature-level or system-wide test when the stable behavior spans several components.
 
-Deprioritize detailed tests for:
+## What to defer
 
-- private helpers already exercised through public behavior;
-- trivial forwarding code;
-- generated code;
-- disposable prototypes;
-- temporary adapters;
-- rapidly changing UI structure;
-- code likely to be replaced before stabilization;
-- low-impact behavior that is easy to verify manually.
+Consider deferring detailed automation for:
 
-Deprioritization does not mean zero validation. Make the accepted risk explicit.
+- exploratory UI;
+- temporary navigation;
+- provisional coordinators;
+- short-lived adapters;
+- code generated for a spike;
+- low-risk behavior that is cheap to verify manually;
+- code likely to be removed before release.
 
-## Manual versus automated verification
+Deferral is acceptable only when:
 
-Prefer automation when:
+- the risk is understood;
+- the code is genuinely volatile;
+- another validation method exists;
+- the decision is revisited when the feature stabilizes.
 
-- the scenario runs often;
-- setup is complex;
-- results are easy to assert;
-- failures are costly;
-- humans may miss subtle regressions.
+Do not defer high-risk stable behavior merely because surrounding code is changing.
 
-Prefer manual verification when:
+## Alternative validation during exploration
 
-- behavior is primarily visual or exploratory;
-- requirements are still changing;
-- the scenario is rare and cheap to check;
-- automation would be brittle and expensive.
+When durable automated tests are premature, use lighter feedback methods.
 
-Use both when automated tests protect behavior and manual testing evaluates usability or visual quality.
+Options include:
 
-## Team and delivery context
+- focused manual scenarios;
+- assertions in spike code;
+- logging and instrumentation;
+- sample fixtures;
+- playground or command-line experiments;
+- temporary comparison scripts;
+- proof-of-concept integration checks.
 
-Increase automation when:
+These methods support learning but do not replace regression tests once the behavior becomes part of the product.
 
-- many developers modify the same areas;
-- ownership is distributed;
-- releases are frequent;
-- onboarding is active;
-- QA capacity is limited;
-- production incidents are expensive.
-
-A solo prototype may accept more manual verification than a shared production codebase.
-
-Adapt recommendations to team size, release cadence, ownership, and failure cost.
+Remove temporary validation code that should not ship.
 
 ## Decision workflow
 
-1. List the behaviors or domains under consideration.
-2. Estimate impact, probability, detectability, and recovery cost.
-3. Identify stable rules and volatile implementation details.
-4. Estimate manual verification cost.
-5. Estimate automation setup and maintenance cost.
-6. Rank behaviors by expected risk reduction.
-7. Choose test depth for each behavior.
-8. Prefer broader coverage when it protects several components efficiently.
-9. Avoid duplicate tests that add little new confidence.
-10. Revisit priorities as the product and architecture evolve.
+1. Define what the team is trying to learn or protect.
+2. Separate stable behavior from unstable implementation.
+3. Estimate the impact of failure.
+4. Decide whether the code is likely to survive.
+5. Choose the smallest durable boundary.
+6. Use TDD when the contract is clear enough to guide design.
+7. Use lighter validation when the work is exploratory.
+8. Avoid freezing temporary structure.
+9. Add broader regression coverage as behavior stabilizes.
+10. Revisit deferred tests before release or handoff.
 
 ## Common mistakes
 
-- Setting one coverage target for every module.
-- Testing by file size or architectural prominence.
-- Treating high coverage as proof of quality.
-- Spending heavily on volatile implementation details.
-- Leaving stable high-risk rules untested because the feature is evolving.
-- Automating cheap one-off checks with brittle infrastructure.
-- Relying on manual testing for repetitive or hard-to-reproduce scenarios.
-- Ignoring recovery cost.
-- Keeping obsolete tests after the protected behavior disappears.
-- Prioritizing easy tests over valuable tests.
+- Skipping all tests because the feature is new.
+- Writing detailed tests for code expected to be discarded.
+- Treating TDD as mandatory for every task.
+- Treating exploratory validation as permanent regression coverage.
+- Testing provisional structure instead of stable behavior.
+- Leaving risky algorithms untested inside a prototype.
+- Keeping obsolete tests after the design changes.
+- Deferring tests without recording the accepted risk.
+- Promoting spike code without adding durable tests.
+- Waiting for perfect stability before testing critical behavior.
 
 ## Review checklist
 
-Before recommending priorities, check:
+Before recommending tests for volatile code, check:
 
-- What failure is being prevented?
-- What is the impact if it occurs?
-- How likely is it to regress?
-- How easily would the team detect it?
-- How expensive is recovery?
-- Is the behavior stable enough to protect?
-- Is manual verification reliable and affordable?
-- What depth of coverage is justified?
-- Is it already protected by a broader test?
-- Is maintenance cost proportionate to confidence gained?
+- What behavior is already stable?
+- What implementation details are likely to change?
+- What is the impact if the behavior is wrong?
+- Is the code expected to survive?
+- Would TDD clarify or prematurely constrain the design?
+- Can a narrower invariant be tested now?
+- Is a broader outcome more stable than internal structure?
+- What validation will be used if automation is deferred?
+- When will deferred coverage be reconsidered?
+- Are temporary tests or scaffolding being mistaken for production coverage?
