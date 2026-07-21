@@ -1,0 +1,20 @@
+{
+  "name": "ios-testing-strategy",
+  "version": "1.0.0",
+  "description": "Risk-based iOS testing guidance for choosing test boundaries, real dependencies, test doubles, coverage priorities, TDD, and maintainable verification workflows.",
+  "author": {
+    "name": "Artem Mirzabekian"
+  },
+  "homepage": "https://github.com/Livsy90/iOS-Testing-Strategy-Agent-Skill",
+  "repository": "https://github.com/Livsy90/iOS-Testing-Strategy-Agent-Skill",
+  "license": "MIT",
+  "keywords": [
+    "ios",
+    "swift",
+    "testing",
+    "test-strategy",
+    "unit-testing",
+    "integration-testing",
+    "system-testing"
+  ]
+}
