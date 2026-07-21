@@ -1,0 +1,5 @@
+{
+  "name": "ios-testing-strategy",
+  "version": "1.0.0",
+  "description": "Risk-based iOS testing guidance for choosing test boundaries, real dependencies, test doubles, coverage priorities, TDD, and maintainable verification workflows."
+}
