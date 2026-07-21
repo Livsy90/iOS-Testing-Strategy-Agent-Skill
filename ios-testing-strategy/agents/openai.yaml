@@ -1,0 +1,7 @@
+interface:
+  display_name: "iOS Testing Strategy"
+  short_description: "Choose test boundaries, doubles, priorities, and maintainable verification workflows."
+  default_prompt: "Review this iOS testing strategy and recommend the right test boundaries, dependencies, priorities, and validation approach."
+
+policy:
+  allow_implicit_invocation: true
